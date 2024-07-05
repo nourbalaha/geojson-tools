@@ -48,19 +48,20 @@ func TestValidateMultiPoint(t *testing.T) {
 	err := ValidateGeoJSON([]byte(validMultiPoint))
 	assert.Nil(t, err)
 
-	// invalidMultiPoint := `{
-	// 		"type": "Feature",
-	// 		"geometry": {
-	// 				"type": "MultiPoint",
-	// 				"coordinates": [
-	// 						[100.0, 0.0]
-	// 				]
-	// 		},
-	// 		"properties": {}
-	// }`
+	invalidMultiPoint := `{
+			"type": "Feature",
+			"geometry": {
+					"type": "MultiPoint",
+					"coordinates": [
+							[100.0],
+							[101.0],
+					]
+			},
+			"properties": {}
+	}`
 
-	// err = ValidateGeoJSON([]byte(invalidMultiPoint));
-	// assert.Error(t, err)
+	err = ValidateGeoJSON([]byte(invalidMultiPoint));
+	assert.Error(t, err)
 }
 
 func TestValidateLineString(t *testing.T) {
@@ -116,21 +117,21 @@ func TestValidateMultiLineString(t *testing.T) {
 	err := ValidateGeoJSON([]byte(validMultiLineString))
 	assert.Nil(t, err)
 
-	// invalidMultiLineString := `{
-	//     "type": "Feature",
-	//     "geometry": {
-	//         "type": "MultiLineString",
-	//         "coordinates": [
-	//             [
-	//                 [100.0, 0.0]
-	//             ]
-	//         ]
-	//     },
-	//     "properties": {}
-	// }`
+	invalidMultiLineString := `{
+	    "type": "Feature",
+	    "geometry": {
+	        "type": "MultiLineString",
+	        "coordinates": [
+	            [
+	                [100.0, 0.0]
+	            ]
+	        ]
+	    },
+	    "properties": {}
+	}`
 
-	// err = ValidateGeoJSON([]byte(invalidMultiLineString));
-	// assert.Error(t, err)
+	err = ValidateGeoJSON([]byte(invalidMultiLineString));
+	assert.Error(t, err)
 }
 
 func TestValidatePolygon(t *testing.T) {

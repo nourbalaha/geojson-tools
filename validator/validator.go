@@ -118,7 +118,16 @@ func validatePoint(coordinates interface{}) error {
 
 // validateMultiPoint validates coordinates for MultiPoint type
 func validateMultiPoint(coordinates interface{}) error {
-	return validateCoordinatesArray(coordinates, 2)
+	coords, ok := coordinates.([]interface{})
+	if !ok {
+		return ErrInvalidCoordinates
+	}
+	for _, point := range coords {
+		if err := validatePoint(point); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // validateLineString validates the coordinates for a LineString type
@@ -128,7 +137,7 @@ func validateLineString(coordinates interface{}) error {
 		return ErrInvalidCoordinates
 	}
 	for _, c := range coords {
-		if err := validateCoordinates(c, 2); err != nil {
+		if err := validatePoint(c); err != nil {
 			return err
 		}
 	}
@@ -137,7 +146,16 @@ func validateLineString(coordinates interface{}) error {
 
 // validateMultiLineString validates coordinates for MultiLineString type
 func validateMultiLineString(coordinates interface{}) error {
-	return validateCoordinatesArrayOfArrays(coordinates, 2)
+	coords, ok := coordinates.([]interface{})
+	if !ok {
+		return ErrInvalidCoordinates
+	}
+	for _, lineString := range coords {
+		if err := validateLineString(lineString); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // validatePolygon validates the coordinates for a Polygon type
@@ -156,7 +174,7 @@ func validatePolygon(coordinates interface{}) error {
 			return ErrInvalidPolygon
 		}
 		for _, c := range ringCoords {
-			if err := validateCoordinates(c, 2); err != nil {
+			if err := validatePoint(c); err != nil {
 				return err
 			}
 		}
@@ -183,34 +201,6 @@ func validateCoordinates(coordinates interface{}, dim int) error {
 	coords, ok := coordinates.([]interface{})
 	if !ok || len(coords) != dim {
 		return ErrInvalidCoordinates
-	}
-	return nil
-}
-
-// validateCoordinatesArray validates an array of coordinates
-func validateCoordinatesArray(coordinates interface{}, dim int) error {
-	coords, ok := coordinates.([]interface{})
-	if !ok {
-		return ErrInvalidCoordinates
-	}
-	for _, c := range coords {
-		if err := validateCoordinates(c, dim); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// validateCoordinatesArrayOfArrays validates an array of array of coordinates
-func validateCoordinatesArrayOfArrays(coordinates interface{}, dim int) error {
-	coords, ok := coordinates.([]interface{})
-	if !ok {
-		return ErrInvalidCoordinates
-	}
-	for _, c := range coords {
-		if err := validateCoordinatesArray(c, dim); err != nil {
-			return err
-		}
 	}
 	return nil
 }
