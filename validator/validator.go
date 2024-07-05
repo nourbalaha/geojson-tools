@@ -3,6 +3,8 @@ package validator
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strconv"
 )
 
 // GeoJSON represents the main structure of GeoJSON data
@@ -201,6 +203,18 @@ func validateCoordinates(coordinates interface{}, dim int) error {
 	coords, ok := coordinates.([]interface{})
 	if !ok || len(coords) != dim {
 		return ErrInvalidCoordinates
+	}
+	for _, c := range coords {
+		switch c.(type) {
+		case float64, float32, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, json.Number:
+			continue
+		case string:
+			if _, err := strconv.ParseFloat(fmt.Sprintf("%v", c), 64); err != nil {
+				return ErrInvalidCoordinates
+			}
+		default:
+			return ErrInvalidCoordinates
+		}
 	}
 	return nil
 }
