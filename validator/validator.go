@@ -7,113 +7,113 @@ import (
 
 // GeoJSON represents the main structure of GeoJSON data
 type GeoJSON struct {
-    Type       string      `json:"type"`
-    Geometry   *Geometry   `json:"geometry,omitempty"`
-    Properties interface{} `json:"properties,omitempty"`
+	Type       string      `json:"type"`
+	Geometry   *Geometry   `json:"geometry,omitempty"`
+	Properties interface{} `json:"properties,omitempty"`
 }
 
 // Geometry represents the geometry of a GeoJSON object
 type Geometry struct {
-    Type        string        `json:"type"`
-    Coordinates interface{}   `json:"coordinates"`
-    Geometries  []*Geometry   `json:"geometries,omitempty"` // For GeometryCollection
+	Type        string      `json:"type"`
+	Coordinates interface{} `json:"coordinates"`
+	Geometries  []*Geometry `json:"geometries,omitempty"` // For GeometryCollection
 }
 
 // Error messages
 var (
-    ErrInvalidType         = errors.New("invalid type")
-    ErrInvalidCoordinates  = errors.New("invalid coordinates")
-    ErrInvalidGeometryType = errors.New("invalid geometry type")
-    ErrInvalidPolygon      = errors.New("invalid polygon coordinates")
+	ErrInvalidType         = errors.New("invalid type")
+	ErrInvalidCoordinates  = errors.New("invalid coordinates")
+	ErrInvalidGeometryType = errors.New("invalid geometry type")
+	ErrInvalidPolygon      = errors.New("invalid polygon coordinates")
 )
 
 // ValidateGeoJSON validates the GeoJSON data
 func ValidateGeoJSON(data []byte) error {
-    var geo GeoJSON
-    if err := json.Unmarshal(data, &geo); err != nil {
-        return err
-    }
-    return validateGeoJSONObject(&geo)
+	var geo GeoJSON
+	if err := json.Unmarshal(data, &geo); err != nil {
+		return err
+	}
+	return validateGeoJSONObject(&geo)
 }
 
 // validateGeoJSONObject validates a GeoJSON object
 func validateGeoJSONObject(geo *GeoJSON) error {
-    switch geo.Type {
-    case "Feature":
-        return validateFeature(geo)
-    case "FeatureCollection":
-        return validateFeatureCollection(geo)
-    default:
-        return validateGeometry(geo.Geometry)
-    }
+	switch geo.Type {
+	case "Feature":
+		return validateFeature(geo)
+	case "FeatureCollection":
+		return validateFeatureCollection(geo)
+	default:
+		return validateGeometry(geo.Geometry)
+	}
 }
 
 // validateFeature validates a GeoJSON Feature
 func validateFeature(geo *GeoJSON) error {
-    if geo.Geometry == nil {
-        return errors.New("feature must have a geometry")
-    }
-    return validateGeometry(geo.Geometry)
+	if geo.Geometry == nil {
+		return errors.New("feature must have a geometry")
+	}
+	return validateGeometry(geo.Geometry)
 }
 
 // validateFeatureCollection validates a GeoJSON FeatureCollection
 func validateFeatureCollection(geo *GeoJSON) error {
-    features, ok := geo.Properties.([]interface{})
-    if !ok {
-        return errors.New("feature collection properties must be an array of features")
-    }
-    for _, f := range features {
-        featureMap, ok := f.(map[string]interface{})
-        if !ok {
-            return errors.New("each feature must be an object")
-        }
-        featureJSON, err := json.Marshal(featureMap)
-        if err != nil {
-            return err
-        }
-        if err := ValidateGeoJSON(featureJSON); err != nil {
-            return err
-        }
-    }
-    return nil
+	features, ok := geo.Properties.([]interface{})
+	if !ok {
+		return errors.New("feature collection properties must be an array of features")
+	}
+	for _, f := range features {
+		featureMap, ok := f.(map[string]interface{})
+		if !ok {
+			return errors.New("each feature must be an object")
+		}
+		featureJSON, err := json.Marshal(featureMap)
+		if err != nil {
+			return err
+		}
+		if err := ValidateGeoJSON(featureJSON); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // validateGeometry validates a GeoJSON Geometry
 func validateGeometry(geo *Geometry) error {
-    if geo == nil {
-        return errors.New("geometry cannot be nil")
-    }
-    switch geo.Type {
-    case "Point":
-        return validatePoint(geo.Coordinates)
-    case "MultiPoint":
-        return validateMultiPoint(geo.Coordinates)
-    case "LineString":
-        return validateLineString(geo.Coordinates)
-    case "MultiLineString":
-        return validateMultiLineString(geo.Coordinates)
-    case "Polygon":
-        return validatePolygon(geo.Coordinates)
-    case "MultiPolygon":
-        return validateMultiPolygon(geo.Coordinates)
-    case "GeometryCollection":
-        if geo.Geometries == nil {
-            return errors.New("geometry collection must have geometries")
-        }
-        for _, g := range geo.Geometries {
-            if err := validateGeometry(g); err != nil {
-                return err
-            }
-        }
-    default:
-        return ErrInvalidGeometryType
-    }
-    return nil
+	if geo == nil {
+		return errors.New("geometry cannot be nil")
+	}
+	switch geo.Type {
+	case "Point":
+		return validatePoint(geo.Coordinates)
+	case "MultiPoint":
+		return validateMultiPoint(geo.Coordinates)
+	case "LineString":
+		return validateLineString(geo.Coordinates)
+	case "MultiLineString":
+		return validateMultiLineString(geo.Coordinates)
+	case "Polygon":
+		return validatePolygon(geo.Coordinates)
+	case "MultiPolygon":
+		return validateMultiPolygon(geo.Coordinates)
+	case "GeometryCollection":
+		if geo.Geometries == nil {
+			return errors.New("geometry collection must have geometries")
+		}
+		for _, g := range geo.Geometries {
+			if err := validateGeometry(g); err != nil {
+				return err
+			}
+		}
+	default:
+		return ErrInvalidGeometryType
+	}
+	return nil
 }
 
 // validatePoint validates coordinates for Point type
 func validatePoint(coordinates interface{}) error {
-    return validateCoordinates(coordinates, 2)
+	return validateCoordinates(coordinates, 2)
 }
 
 // validateMultiPoint validates coordinates for MultiPoint type
@@ -123,109 +123,109 @@ func validateMultiPoint(coordinates interface{}) error {
 
 // validateLineString validates the coordinates for a LineString type
 func validateLineString(coordinates interface{}) error {
-    coords, ok := coordinates.([]interface{})
-    if !ok || len(coords) < 2 {
-        return ErrInvalidCoordinates
-    }
-    for _, c := range coords {
-        if err := validateCoordinates(c, 2); err != nil {
-            return err
-        }
-    }
-    return nil
+	coords, ok := coordinates.([]interface{})
+	if !ok || len(coords) < 2 {
+		return ErrInvalidCoordinates
+	}
+	for _, c := range coords {
+		if err := validateCoordinates(c, 2); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // validateMultiLineString validates coordinates for MultiLineString type
 func validateMultiLineString(coordinates interface{}) error {
-    return validateCoordinatesArrayOfArrays(coordinates, 2)
+	return validateCoordinatesArrayOfArrays(coordinates, 2)
 }
 
 // validatePolygon validates the coordinates for a Polygon type
 func validatePolygon(coordinates interface{}) error {
-    coords, ok := coordinates.([]interface{})
-    if !ok {
-        return ErrInvalidCoordinates
-    }
-    for _, ring := range coords {
-        ringCoords, ok := ring.([]interface{})
-        if !ok || len(ringCoords) < 4 {
-            return ErrInvalidPolygon
-        }
-        // The first and last position must be the same
-        if !equalCoordinates(ringCoords[0], ringCoords[len(ringCoords)-1]) {
-            return ErrInvalidPolygon
-        }
-        for _, c := range ringCoords {
-            if err := validateCoordinates(c, 2); err != nil {
-                return err
-            }
-        }
-    }
-    return nil
+	coords, ok := coordinates.([]interface{})
+	if !ok {
+		return ErrInvalidCoordinates
+	}
+	for _, ring := range coords {
+		ringCoords, ok := ring.([]interface{})
+		if !ok || len(ringCoords) < 4 {
+			return ErrInvalidPolygon
+		}
+		// The first and last position must be the same
+		if !equalCoordinates(ringCoords[0], ringCoords[len(ringCoords)-1]) {
+			return ErrInvalidPolygon
+		}
+		for _, c := range ringCoords {
+			if err := validateCoordinates(c, 2); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // validateMultiPolygon validates the coordinates for a MultiPolygon type
 func validateMultiPolygon(coordinates interface{}) error {
-    coords, ok := coordinates.([]interface{})
-    if !ok {
-        return ErrInvalidCoordinates
-    }
-    for _, polygon := range coords {
-        if err := validatePolygon(polygon); err != nil {
-            return err
-        }
-    }
-    return nil
+	coords, ok := coordinates.([]interface{})
+	if !ok {
+		return ErrInvalidCoordinates
+	}
+	for _, polygon := range coords {
+		if err := validatePolygon(polygon); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // validateCoordinates validates coordinates for a given dimension
 func validateCoordinates(coordinates interface{}, dim int) error {
-    coords, ok := coordinates.([]interface{})
-    if !ok || len(coords) != dim {
-        return ErrInvalidCoordinates
-    }
-    return nil
+	coords, ok := coordinates.([]interface{})
+	if !ok || len(coords) != dim {
+		return ErrInvalidCoordinates
+	}
+	return nil
 }
 
 // validateCoordinatesArray validates an array of coordinates
 func validateCoordinatesArray(coordinates interface{}, dim int) error {
-    coords, ok := coordinates.([]interface{})
-    if !ok {
-        return ErrInvalidCoordinates
-    }
-    for _, c := range coords {
-        if err := validateCoordinates(c, dim); err != nil {
-            return err
-        }
-    }
-    return nil
+	coords, ok := coordinates.([]interface{})
+	if !ok {
+		return ErrInvalidCoordinates
+	}
+	for _, c := range coords {
+		if err := validateCoordinates(c, dim); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // validateCoordinatesArrayOfArrays validates an array of array of coordinates
 func validateCoordinatesArrayOfArrays(coordinates interface{}, dim int) error {
-    coords, ok := coordinates.([]interface{})
-    if !ok {
-        return ErrInvalidCoordinates
-    }
-    for _, c := range coords {
-        if err := validateCoordinatesArray(c, dim); err != nil {
-            return err
-        }
-    }
-    return nil
+	coords, ok := coordinates.([]interface{})
+	if !ok {
+		return ErrInvalidCoordinates
+	}
+	for _, c := range coords {
+		if err := validateCoordinatesArray(c, dim); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // equalCoordinates checks if two coordinates are equal
 func equalCoordinates(c1, c2 interface{}) bool {
-    coords1, ok1 := c1.([]interface{})
-    coords2, ok2 := c2.([]interface{})
-    if !ok1 || !ok2 || len(coords1) != len(coords2) {
-        return false
-    }
-    for i := range coords1 {
-        if coords1[i] != coords2[i] {
-            return false
-        }
-    }
-    return true
+	coords1, ok1 := c1.([]interface{})
+	coords2, ok2 := c2.([]interface{})
+	if !ok1 || !ok2 || len(coords1) != len(coords2) {
+		return false
+	}
+	for i := range coords1 {
+		if coords1[i] != coords2[i] {
+			return false
+		}
+	}
+	return true
 }
